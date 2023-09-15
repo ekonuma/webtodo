@@ -1,8 +1,12 @@
 package usercase
 
 import (
+	"os"
+	"time"
+
 	"github.com/ekonuma/webtodo/model"
 	"github.com/ekonuma/webtodo/repository"
+	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -12,20 +16,20 @@ type IUserUserCase interface {
 }
 
 type userUserCase struct {
-	ur repository.IUserRepository
+	repository repository.IUserRepository
 }
 
-func NewUserUserCase(ur repository.IUserRepository) IUserUserCase {
-	return &userUserCase{ur}
+func NewUserUserCase(repository repository.IUserRepository) IUserUserCase {
+	return &userUserCase{repository}
 }
 
-func (uu *userUserCase) SignUp(user model.User) (model.UserResponse, error) {
+func (userUserCase *userUserCase) SignUp(user model.User) (model.UserResponse, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 	if err != nil {
 		return model.UserResponse{}, err
 	}
 	newUser := model.User{Email: user.Email, Password: string(hash)}
-	if err := uu.ur.CreateUser(&newUser); err != nil {
+	if err := userUserCase.repository.CreateUser(&newUser); err != nil {
 		return model.UserResponse{}, err
 	}
 	resUser := model.UserResponse{
@@ -35,13 +39,23 @@ func (uu *userUserCase) SignUp(user model.User) (model.UserResponse, error) {
 	return resUser, nil
 }
 
-func (uu *userUserCase) Login(user model.User) (string, error) {
+func (userUserCase *userUserCase) Login(user model.User) (string, error) {
 	storedUser := model.User{}
-	if err := uu.ur.GetUserByEmail(&storedUser, user.Email); err != nil {
+	if err := userUserCase.repository.GetUserByEmail(&storedUser, user.Email); err != nil {
 		return "", err
 	}
 	err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password))
 	if err != nil {
 		return "", err
 	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": storedUser.ID,
+		"exp":     time.Now().Add(time.Hour * 12).Unix(),
+	})
+	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }
