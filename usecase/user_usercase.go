@@ -10,20 +10,20 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type IUserUserCase interface {
+type IUserUseCase interface {
 	SignUp(user model.User) (model.UserResponse, error)
 	Login(user model.User) (string, error)
 }
 
-type userUserCase struct {
+type userUsecase struct {
 	repository repository.IUserRepository
 }
 
-func NewUserUserCase(repository repository.IUserRepository) IUserUserCase {
-	return &userUserCase{repository}
+func NewUserUserCase(repository repository.IUserRepository) IUserUseCase {
+	return &userUsecase{repository}
 }
 
-func (userUserCase *userUserCase) SignUp(user model.User) (model.UserResponse, error) {
+func (userUserCase *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 	if err != nil {
 		return model.UserResponse{}, err
@@ -39,9 +39,9 @@ func (userUserCase *userUserCase) SignUp(user model.User) (model.UserResponse, e
 	return resUser, nil
 }
 
-func (userUserCase *userUserCase) Login(user model.User) (string, error) {
+func (userUsecase *userUsecase) Login(user model.User) (string, error) {
 	storedUser := model.User{}
-	if err := userUserCase.repository.GetUserByEmail(&storedUser, user.Email); err != nil {
+	if err := userUsecase.repository.GetUserByEmail(&storedUser, user.Email); err != nil {
 		return "", err
 	}
 	err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password))
