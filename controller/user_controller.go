@@ -21,7 +21,7 @@ type userController struct {
 	userUsecase usecase.IUserUsecase
 }
 
-func NewUserController(userUsecase userUsecase.IUserUsecase) IUserController {
+func NewUserController(userUsecase usecase.IUserUsecase) IUserController {
 	return &userController{userUsecase}
 }
 

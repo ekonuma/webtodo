@@ -1,4 +1,4 @@
-package usercase
+package usecase
 
 import (
 	"os"
@@ -10,16 +10,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type IUserUseCase interface {
+type IUserUsecase interface {
 	SignUp(user model.User) (model.UserResponse, error)
-	Login(user model.User) (string, error)
+	LogIn(user model.User) (string, error)
 }
 
 type userUsecase struct {
 	repository repository.IUserRepository
 }
 
-func NewUserUserCase(repository repository.IUserRepository) IUserUseCase {
+func NewUserUserCase(repository repository.IUserRepository) IUserUsecase {
 	return &userUsecase{repository}
 }
 
@@ -39,7 +39,7 @@ func (userUserCase *userUsecase) SignUp(user model.User) (model.UserResponse, er
 	return resUser, nil
 }
 
-func (userUsecase *userUsecase) Login(user model.User) (string, error) {
+func (userUsecase *userUsecase) LogIn(user model.User) (string, error) {
 	storedUser := model.User{}
 	if err := userUsecase.repository.GetUserByEmail(&storedUser, user.Email); err != nil {
 		return "", err

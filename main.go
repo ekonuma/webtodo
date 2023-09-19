@@ -11,7 +11,7 @@ import (
 func main(){
 	db := db.NewDB()
 	userRepository := repository.NewUserRepository(db)
-	usercase := usercase.NewUserUserCase(userRepository)
+	usercase := usecase.NewUserUserCase(userRepository)
 	usercontroller := controller.NewUserController(usercase)
 	e := router.NewRouter(usercontroller)
 	e.Logger.Fatal(e.Start(":8080"))
