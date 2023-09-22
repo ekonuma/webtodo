@@ -8,11 +8,14 @@ import (
 	"github.com/ekonuma/webtodo/usecase"
 )
 
-func main(){
+func main() {
 	db := db.NewDB()
 	userRepository := repository.NewUserRepository(db)
-	usecase := usecase.NewUserUserCase(userRepository)
-	usercontroller := controller.NewUserController(usecase)
-	e := router.NewRouter(usercontroller)
+	taskRepository := repository.NewTaskRepository(db)
+	userUsecase := usecase.NewUserUserCase(userRepository)
+	taskUsecase := usecase.NewTaskUsecase(taskRepository)
+	userController := controller.NewUserController(userUsecase)
+	taskController := controller.NewTaskController(taskUsecase)
+	e := router.NewRouter(userController, taskController)
 	e.Logger.Fatal(e.Start(":8080"))
 }

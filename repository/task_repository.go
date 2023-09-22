@@ -31,8 +31,8 @@ func (taskRepository *taskRepository) GetAllTasks(tasks *[]model.Task, userId ui
 	return nil;
 }
 
-func (taskRepository *taskRepository) GetTaskById(tasks *[]model.Task, userId uint) error{
-	if err := taskRepository.db.Joins("User").Where("user_id=?", userId).Order("created_at").Find(tasks).Error; err != nil {
+func (taskRepository *taskRepository) GetTaskById(task *model.Task, userId uint, taskId uint) error{
+	if err := taskRepository.db.Joins("User").Where("user_id=?", userId).Order("created_at").Find(task).Error; err != nil {
 		return err
 	}
 	return nil;
