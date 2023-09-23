@@ -32,7 +32,7 @@ func (taskRepository *taskRepository) GetAllTasks(tasks *[]model.Task, userId ui
 }
 
 func (taskRepository *taskRepository) GetTaskById(task *model.Task, userId uint, taskId uint) error{
-	if err := taskRepository.db.Joins("User").Where("user_id=?", userId).Order("created_at").Find(task).Error; err != nil {
+	if err := taskRepository.db.Joins("User").Where("user_id=?", userId).Order("created_at").First(task, taskId).Error; err != nil {
 		return err
 	}
 	return nil;

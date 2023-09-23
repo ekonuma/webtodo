@@ -57,9 +57,6 @@ func (taskUsercase *taskUsecase) CreateTask(task model.Task) (model.TaskResponse
 	if err := taskUsercase.taskRepository.CreateTask(&task); err != nil {
 		return model.TaskResponse{}, err
 	}
-	if err := taskUsercase.taskRepository.CreateTask(&task); err != nil {
-		return model.TaskResponse{}, err
-	}
 	resTask := model.TaskResponse{
 		ID:        task.ID,
 		Title:     task.Title,
