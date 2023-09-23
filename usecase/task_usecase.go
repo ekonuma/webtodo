@@ -3,9 +3,10 @@ package usecase
 import (
 	"github.com/ekonuma/webtodo/model"
 	"github.com/ekonuma/webtodo/repository"
+	"github.com/ekonuma/webtodo/validator"
 )
 
-type ITaskUsecase interface{
+type ITaskUsecase interface {
 	GetAllTasks(userId uint) ([]model.TaskResponse, error)
 	GetTaskById(userId uint, taskId uint) (model.TaskResponse, error)
 	CreateTask(task model.Task) (model.TaskResponse, error)
@@ -15,10 +16,11 @@ type ITaskUsecase interface{
 
 type taskUsecase struct {
 	taskRepository repository.ITaskRepository
+	taskValidator  validator.ITaskValidator
 }
 
-func NewTaskUsecase(taskRepository repository.ITaskRepository) ITaskUsecase {
-	return &taskUsecase{taskRepository}
+func NewTaskUsecase(taskRepository repository.ITaskRepository, taskValidator validator.ITaskValidator) ITaskUsecase {
+	return &taskUsecase{taskRepository, taskValidator}
 }
 
 func (taskUsecase *taskUsecase) GetAllTasks(userId uint) ([]model.TaskResponse, error) {
@@ -53,8 +55,12 @@ func (taskUsercase *taskUsecase) GetTaskById(userId uint, taskId uint) (model.Ta
 	return resTask, nil
 }
 
-func (taskUsercase *taskUsecase) CreateTask(task model.Task) (model.TaskResponse, error) {
-	if err := taskUsercase.taskRepository.CreateTask(&task); err != nil {
+func (taskUsecase *taskUsecase) CreateTask(task model.Task) (model.TaskResponse, error) {
+	if err := taskUsecase.taskValidator.TaskValidate(task); err != nil {
+		return model.TaskResponse{}, err
+	}
+
+	if err := taskUsecase.taskRepository.CreateTask(&task); err != nil {
 		return model.TaskResponse{}, err
 	}
 	resTask := model.TaskResponse{
@@ -66,11 +72,12 @@ func (taskUsercase *taskUsecase) CreateTask(task model.Task) (model.TaskResponse
 	return resTask, nil
 }
 
-func (taskUsercase *taskUsecase) UpdateTask(task model.Task, userId uint, taskId uint) (model.TaskResponse, error) {
-	if err := taskUsercase.taskRepository.UpdateTask(&task, userId, taskId); err != nil {
+func (taskUsecase *taskUsecase) UpdateTask(task model.Task, userId uint, taskId uint) (model.TaskResponse, error) {
+	if err := taskUsecase.taskValidator.TaskValidate(task); err != nil {
 		return model.TaskResponse{}, err
 	}
-	if err := taskUsercase.taskRepository.UpdateTask(&task, userId, taskId); err != nil {
+
+	if err := taskUsecase.taskRepository.UpdateTask(&task, userId, taskId); err != nil {
 		return model.TaskResponse{}, err
 	}
 	resTask := model.TaskResponse{
@@ -82,8 +89,8 @@ func (taskUsercase *taskUsecase) UpdateTask(task model.Task, userId uint, taskId
 	return resTask, nil
 }
 
-func (taskUsercase *taskUsecase) DeleteTask(userId uint, taskId uint) error {
-	if err := taskUsercase.taskRepository.DeleteTask(userId, taskId); err != nil {
+func (taskUsecase *taskUsecase) DeleteTask(userId uint, taskId uint) error {
+	if err := taskUsecase.taskRepository.DeleteTask(userId, taskId); err != nil {
 		return err
 	}
 	return nil

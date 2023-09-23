@@ -6,6 +6,7 @@ import (
 
 	"github.com/ekonuma/webtodo/model"
 	"github.com/ekonuma/webtodo/repository"
+	"github.com/ekonuma/webtodo/validator"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -16,20 +17,25 @@ type IUserUsecase interface {
 }
 
 type userUsecase struct {
-	repository repository.IUserRepository
+	repository    repository.IUserRepository
+	userValidator validator.IUserValidator
 }
 
-func NewUserUserCase(repository repository.IUserRepository) IUserUsecase {
-	return &userUsecase{repository}
+func NewUserUserCase(repository repository.IUserRepository, userValidator validator.IUserValidator) IUserUsecase {
+	return &userUsecase{repository, userValidator}
 }
 
-func (userUserCase *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
+func (userUsecase *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
+	if err := userUsecase.userValidator.UserValidate(user); err != nil {
+		return model.UserResponse{}, err
+	}
+	
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 	if err != nil {
 		return model.UserResponse{}, err
 	}
 	newUser := model.User{Email: user.Email, Password: string(hash)}
-	if err := userUserCase.repository.CreateUser(&newUser); err != nil {
+	if err := userUsecase.repository.CreateUser(&newUser); err != nil {
 		return model.UserResponse{}, err
 	}
 	resUser := model.UserResponse{
@@ -40,6 +46,10 @@ func (userUserCase *userUsecase) SignUp(user model.User) (model.UserResponse, er
 }
 
 func (userUsecase *userUsecase) LogIn(user model.User) (string, error) {
+	if err := userUsecase.userValidator.UserValidate(user); err != nil {
+		return "", err
+	}
+
 	storedUser := model.User{}
 	if err := userUsecase.repository.GetUserByEmail(&storedUser, user.Email); err != nil {
 		return "", err
