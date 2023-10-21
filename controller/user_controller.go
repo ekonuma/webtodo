@@ -50,10 +50,11 @@ func (userController *userController) LogIn(c echo.Context) error {
 	cookie := new(http.Cookie)
 	cookie.Name = "token"
 	cookie.Value = tokenString
-	cookie.Expires = time.Now().Add(24 * time.Hour)
+	cookie.Expires = time.Now().Add(60 * time.Minute)
 	cookie.Path = "/"
 	cookie.Domain = os.Getenv("API_DOMAIN")
 	cookie.HttpOnly = true
+	cookie.Secure = true
 	cookie.SameSite = http.SameSiteNoneMode
 	c.SetCookie(cookie)
 
